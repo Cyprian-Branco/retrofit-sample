@@ -7,6 +7,7 @@ import java.util.Date;
  * NOTE: all of the attr should define as public and also the name should match in REST API
  */
 public class TweetModel {
+    public String id;
     public String feel;
     public String body;
     public Date created_at;

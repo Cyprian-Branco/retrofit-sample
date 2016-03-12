@@ -3,13 +3,33 @@ package com.atahani.retrofit_sample.ui;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.atahani.retrofit_sample.R;
+import com.atahani.retrofit_sample.adapter.TweetAdapter;
+import com.atahani.retrofit_sample.models.ErrorModel;
+import com.atahani.retrofit_sample.models.TweetModel;
+import com.atahani.retrofit_sample.network.FakeTwitterProvider;
+import com.atahani.retrofit_sample.network.FakeTwitterService;
+import com.atahani.retrofit_sample.utility.Constants;
+import com.atahani.retrofit_sample.utility.ErrorUtils;
+
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
+
+    private TweetAdapter mAdapter;
+    private FakeTwitterService mTService;
+    private RecyclerView mRyTweets;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -18,6 +38,62 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.default_toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("");
+        //get the provider
+        FakeTwitterProvider provider = new FakeTwitterProvider();
+        mTService = provider.getTService();
+        //config recycler view
+        mRyTweets = (RecyclerView) findViewById(R.id.ry_tweets);
+        mRyTweets.setLayoutManager(new LinearLayoutManager(this));
+        mAdapter = new TweetAdapter(this, new TweetAdapter.TweetEventHandler() {
+            @Override
+            public void onEditTweet(String tweetId, int position) {
+                //TODO : action on edit tweet
+            }
+
+            @Override
+            public void onDeleteTweet(String tweetId, int position) {
+                //TODO: action on delete
+            }
+        });
+        mRyTweets.setAdapter(mAdapter);
+
+        //get tweets in load
+        getTweetsFromServer();
+    }
+
+    /**
+     * get tweets from server
+     */
+    private void getTweetsFromServer() {
+        Call<List<TweetModel>> call = mTService.getTweets();
+        call.enqueue(new Callback<List<TweetModel>>() {
+            @Override
+            public void onResponse(Call<List<TweetModel>> call, Response<List<TweetModel>> response) {
+
+                if (response.isSuccess()) {
+                    //update the adapter data
+                    mAdapter.updateAdapterData(response.body());
+                } else {
+                    ErrorModel errorModel = ErrorUtils.parseError(response);
+                    Toast.makeText(getBaseContext(), "Error type is " + errorModel.type + " , description " + errorModel.description, Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<TweetModel>> call, Throwable t) {
+                //occur when fail to deserialize || no network connection || server unavailable
+                Toast.makeText(getBaseContext(), "Fail it >> " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (requestCode == Constants.CREATE_OR_EDIT_TWEET_REQUEST_CODE && resultCode == RESULT_OK) {
+            getTweetsFromServer();
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
@@ -31,7 +107,9 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
         if (id == R.id.action_tweet) {
             //start new activity to send tweet
-            startActivity(new Intent(this, CreateOrEditTweet.class));
+            Intent postNewTweetIntent = new Intent(this, CreateOrEditTweet.class);
+            postNewTweetIntent.putExtra(Constants.ACTION_TO_DO_KEY, Constants.NEW_TWEET);
+            startActivityForResult(postNewTweetIntent, Constants.CREATE_OR_EDIT_TWEET_REQUEST_CODE);
         }
         return super.onOptionsItemSelected(item);
     }

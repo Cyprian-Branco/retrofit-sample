@@ -93,8 +93,7 @@ public class CreateOrEditTweet extends AppCompatActivity {
             TweetModel tweetModel = new TweetModel();
             //assign tweet model values
             tweetModel.body = mETxTweetBody.getText().toString();
-            //TODO : comment this line for test to occur error > type : 'SOME_FIELDS_ARE_EMPTY'
-//            tweetModel.feel = mSelectedMode;
+            tweetModel.feel = mSelectedMode;
 
             //create call generic class to send request to server
             Call<TweetModel> call = mTService.createNewTweet(tweetModel);
@@ -104,7 +103,10 @@ public class CreateOrEditTweet extends AppCompatActivity {
                 @Override
                 public void onResponse(Call<TweetModel> call, Response<TweetModel> response) {
                     if (response.isSuccess()) {
-                        Toast.makeText(getBaseContext(), "Successfully post tweet at " + response.body().created_at.toString(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(getBaseContext(), "Successfully post new tweet", Toast.LENGTH_LONG).show();
+                        //finish this activity with result OK to refresh the data from server
+                        setResult(RESULT_OK);
+                        finish();
                     } else {
                         ErrorModel errorModel = ErrorUtils.parseError(response);
                         Toast.makeText(getBaseContext(), "Error type is " + errorModel.type + " , description " + errorModel.description, Toast.LENGTH_SHORT).show();
@@ -114,7 +116,7 @@ public class CreateOrEditTweet extends AppCompatActivity {
                 @Override
                 public void onFailure(Call<TweetModel> call, Throwable t) {
                     //occur when fail to deserialize || no network connection || server unavailable
-                    Toast.makeText(getBaseContext(), "Fail it >> " + t.getCause(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getBaseContext(), "Fail it >> " + t.getMessage(), Toast.LENGTH_LONG).show();
                 }
             });
 

@@ -5,4 +5,5 @@
     <color name="colorAccent">#FF4081</color>
     <color name="mode_background">#9FA8DA</color>
     <color name="mode_background_when_selected">#E8EAF6</color>
+    <color name="theme_color_highlight">#F2717171</color>
 </resources>
