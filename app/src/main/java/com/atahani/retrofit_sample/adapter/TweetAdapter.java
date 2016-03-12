@@ -8,9 +8,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 
 import com.atahani.retrofit_sample.R;
 import com.atahani.retrofit_sample.models.TweetModel;
@@ -57,6 +55,7 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.TweetViewHol
         int icon = mContext.getResources().getIdentifier(drawable_name, "drawable", mContext.getPackageName());
         holder.mImMode.setImageDrawable(ContextCompat.getDrawable(mContext, icon));
     }
+
 
     @Override
     public int getItemCount() {

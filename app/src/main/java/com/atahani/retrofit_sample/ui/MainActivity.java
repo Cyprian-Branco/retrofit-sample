@@ -47,7 +47,11 @@ public class MainActivity extends AppCompatActivity {
         mAdapter = new TweetAdapter(this, new TweetAdapter.TweetEventHandler() {
             @Override
             public void onEditTweet(String tweetId, int position) {
-                //TODO : action on edit tweet
+                //start activity to edit tweet
+                Intent editTweetIntent = new Intent(getBaseContext(), CreateOrEditTweet.class);
+                editTweetIntent.putExtra(Constants.ACTION_TO_DO_KEY, Constants.EDIT_TWEET);
+                editTweetIntent.putExtra(Constants.TWEET_ID_KEY, tweetId);
+                startActivityForResult(editTweetIntent, Constants.CREATE_OR_EDIT_TWEET_REQUEST_CODE);
             }
 
             @Override
@@ -73,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
                 if (response.isSuccess()) {
                     //update the adapter data
                     mAdapter.updateAdapterData(response.body());
+                    mAdapter.notifyDataSetChanged();
                 } else {
                     ErrorModel errorModel = ErrorUtils.parseError(response);
                     Toast.makeText(getBaseContext(), "Error type is " + errorModel.type + " , description " + errorModel.description, Toast.LENGTH_SHORT).show();

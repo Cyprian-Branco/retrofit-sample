@@ -8,6 +8,8 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
+import retrofit2.http.Path;
 
 /**
  * the interface implements REST API routes
@@ -19,4 +21,11 @@ public interface FakeTwitterService {
 
     @GET("tweet")
     Call<List<TweetModel>> getTweets();
+
+    @GET("tweet/{id}")
+    Call<TweetModel> getTweetById(@Path("id") String tweetId);
+
+    @PUT("tweet/{id}")
+    Call<TweetModel> updateTweetById(@Path("id") String tweetId, @Body TweetModel tweetModel);
+
 }

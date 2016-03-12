@@ -16,6 +16,7 @@ import com.atahani.retrofit_sample.models.ErrorModel;
 import com.atahani.retrofit_sample.models.TweetModel;
 import com.atahani.retrofit_sample.network.FakeTwitterProvider;
 import com.atahani.retrofit_sample.network.FakeTwitterService;
+import com.atahani.retrofit_sample.utility.Constants;
 import com.atahani.retrofit_sample.utility.ErrorUtils;
 
 import retrofit2.Call;
@@ -29,11 +30,22 @@ public class CreateOrEditTweet extends AppCompatActivity {
     private ImageButton mImHappy;
     private ImageButton mImLoveMode;
     private ImageButton mImUnHappyMode;
+    private int mActionToDo = Constants.NEW_TWEET;
+    private String mTweetIdInEditMode;
+    private FakeTwitterService mTService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_or_edit_tweet);
+        //get argument and check is in edit mode
+        Bundle args = getIntent().getExtras();
+        if (args != null) {
+            mActionToDo = args.getInt(Constants.ACTION_TO_DO_KEY, Constants.NEW_TWEET);
+            if (mActionToDo == Constants.EDIT_TWEET) {
+                mTweetIdInEditMode = args.getString(Constants.TWEET_ID_KEY, "");
+            }
+        }
         Toolbar toolbar = (Toolbar) findViewById(R.id.default_toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("");
@@ -48,35 +60,63 @@ public class CreateOrEditTweet extends AppCompatActivity {
         mImHappy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mImHappy.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background_when_selected));
-                mImLoveMode.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
-                mImUnHappyMode.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
-                mSelectedMode = getStringOfEmojiCode(getResources().getInteger(R.integer.mode_happy));
+                selectTheFeel(getResources().getInteger(R.integer.mode_happy));
             }
         });
         mImLoveMode.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mImLoveMode.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background_when_selected));
-                mImHappy.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
-                mImUnHappyMode.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
-                mSelectedMode = getStringOfEmojiCode(getResources().getInteger(R.integer.mode_love));
+                selectTheFeel(getResources().getInteger(R.integer.mode_love));
             }
         });
         mImUnHappyMode.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mImUnHappyMode.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background_when_selected));
-                mImHappy.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
-                mImLoveMode.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
-                mSelectedMode = getStringOfEmojiCode(getResources().getInteger(R.integer.mode_unhappy));
+                selectTheFeel(getResources().getInteger(R.integer.mode_unhappy));
             }
         });
+        //first create new instant of FakeTwitterProvider
+        FakeTwitterProvider provider = new FakeTwitterProvider();
+        //get the FakeTwitterService interface to call API routes
+        mTService = provider.getTService();
+
+        //check if in edit mode get tweet information from server and assign in
+        //NOTE: this is just for test , in real world should save tweet in db and now get from db !
+        if (mActionToDo == Constants.EDIT_TWEET && !mTweetIdInEditMode.equals("")) {
+            //get tweet by id from server
+            Call<TweetModel> call = mTService.getTweetById(mTweetIdInEditMode);
+            call.enqueue(new Callback<TweetModel>() {
+                @Override
+                public void onResponse(Call<TweetModel> call, Response<TweetModel> response) {
+                    if (response.isSuccess()) {
+                        //bind value to fields
+                        mETxTweetBody.setText(response.body().body);
+                        //get code point of emoji
+                        int currentModeCodePoint = response.body().feel.codePointAt(0);
+                        selectTheFeel(currentModeCodePoint);
+
+                    } else {
+                        ErrorModel errorModel = ErrorUtils.parseError(response);
+                        Toast.makeText(getBaseContext(), "Error type is " + errorModel.type + " , description " + errorModel.description, Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<TweetModel> call, Throwable t) {
+                    //occur when fail to deserialize || no network connection || server unavailable
+                    Toast.makeText(getBaseContext(), "Fail it >> " + t.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
+        }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_send, menu);
+        if (mActionToDo == Constants.EDIT_TWEET) {
+            getMenuInflater().inflate(R.menu.menu_edit, menu);
+        } else {
+            getMenuInflater().inflate(R.menu.menu_send, menu);
+        }
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -85,10 +125,6 @@ public class CreateOrEditTweet extends AppCompatActivity {
         int id = item.getItemId();
         if (id == R.id.action_send) {
             //Send tweet
-            //first create new instant of FakeTwitterProvider
-            FakeTwitterProvider twitterProvider = new FakeTwitterProvider();
-            //get the FakeTwitterService interface to call API routes
-            FakeTwitterService mTService = twitterProvider.getTService();
             //create Tweet Model
             TweetModel tweetModel = new TweetModel();
             //assign tweet model values
@@ -104,6 +140,35 @@ public class CreateOrEditTweet extends AppCompatActivity {
                 public void onResponse(Call<TweetModel> call, Response<TweetModel> response) {
                     if (response.isSuccess()) {
                         Toast.makeText(getBaseContext(), "Successfully post new tweet", Toast.LENGTH_LONG).show();
+                        //finish this activity with result OK to refresh the data from server
+                        setResult(RESULT_OK);
+                        finish();
+                    } else {
+                        ErrorModel errorModel = ErrorUtils.parseError(response);
+                        Toast.makeText(getBaseContext(), "Error type is " + errorModel.type + " , description " + errorModel.description, Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<TweetModel> call, Throwable t) {
+                    //occur when fail to deserialize || no network connection || server unavailable
+                    Toast.makeText(getBaseContext(), "Fail it >> " + t.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
+
+        } else if (id == R.id.action_edit) {
+            //edit this tweet
+            TweetModel tweetModel = new TweetModel();
+            //assign tweet model values
+            tweetModel.body = mETxTweetBody.getText().toString();
+            tweetModel.feel = mSelectedMode;
+
+            Call<TweetModel> call = mTService.updateTweetById(mTweetIdInEditMode, tweetModel);
+            call.enqueue(new Callback<TweetModel>() {
+                @Override
+                public void onResponse(Call<TweetModel> call, Response<TweetModel> response) {
+                    if (response.isSuccess()) {
+                        Toast.makeText(getBaseContext(), "Successfully updated", Toast.LENGTH_LONG).show();
                         //finish this activity with result OK to refresh the data from server
                         setResult(RESULT_OK);
                         finish();
@@ -137,5 +202,25 @@ public class CreateOrEditTweet extends AppCompatActivity {
         StringBuilder sb = new StringBuilder();
         sb.append(Character.toChars(emojiCode));
         return sb.toString();
+    }
+
+    private void selectTheFeel(int emojiCodePoint) {
+        if (emojiCodePoint == getResources().getInteger(R.integer.mode_happy)) {
+            mImHappy.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background_when_selected));
+            mImLoveMode.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
+            mImUnHappyMode.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
+            mSelectedMode = getStringOfEmojiCode(getResources().getInteger(R.integer.mode_happy));
+        } else if (emojiCodePoint == getResources().getInteger(R.integer.mode_love)) {
+            mImLoveMode.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background_when_selected));
+            mImHappy.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
+            mImUnHappyMode.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
+            mSelectedMode = getStringOfEmojiCode(getResources().getInteger(R.integer.mode_love));
+
+        } else if (emojiCodePoint == getResources().getInteger(R.integer.mode_unhappy)) {
+            mImUnHappyMode.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background_when_selected));
+            mImHappy.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
+            mImLoveMode.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
+            mSelectedMode = getStringOfEmojiCode(getResources().getInteger(R.integer.mode_unhappy));
+        }
     }
 }
