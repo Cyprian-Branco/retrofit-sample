@@ -73,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
                 if (response.isSuccess()) {
                     //update the adapter data
                     mAdapter.updateAdapterData(response.body());
+                    mAdapter.notifyDataSetChanged();
                 } else {
                     ErrorModel errorModel = ErrorUtils.parseError(response);
                     Toast.makeText(getBaseContext(), "Error type is " + errorModel.type + " , description " + errorModel.description, Toast.LENGTH_SHORT).show();
