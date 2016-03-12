@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.atahani.retrofit_sample.R;
+import com.atahani.retrofit_sample.adapter.OperationResultModel;
 import com.atahani.retrofit_sample.adapter.TweetAdapter;
 import com.atahani.retrofit_sample.models.ErrorModel;
 import com.atahani.retrofit_sample.models.TweetModel;
@@ -19,6 +20,7 @@ import com.atahani.retrofit_sample.network.FakeTwitterService;
 import com.atahani.retrofit_sample.utility.Constants;
 import com.atahani.retrofit_sample.utility.ErrorUtils;
 
+import java.io.IOException;
 import java.util.List;
 
 import retrofit2.Call;
@@ -55,12 +57,30 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onDeleteTweet(String tweetId, int position) {
-                //TODO: action on delete
+            public void onDeleteTweet(String tweetId, final int position) {
+                Call<OperationResultModel> call = mTService.deleteTweetById(tweetId);
+                //async request
+                call.enqueue(new Callback<OperationResultModel>() {
+                    @Override
+                    public void onResponse(Call<OperationResultModel> call, Response<OperationResultModel> response) {
+                        if (response.isSuccess()) {
+                            //get tweets from server just for test
+                            getTweetsFromServer();
+                        } else {
+                            ErrorModel errorModel = ErrorUtils.parseError(response);
+                            Toast.makeText(getBaseContext(), "Error type is " + errorModel.type + " , description " + errorModel.description, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<OperationResultModel> call, Throwable t) {
+                        //occur when fail to deserialize || no network connection || server unavailable
+                        Toast.makeText(getBaseContext(), "Fail it >> " + t.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
             }
         });
         mRyTweets.setAdapter(mAdapter);
-
         //get tweets in load
         getTweetsFromServer();
     }
