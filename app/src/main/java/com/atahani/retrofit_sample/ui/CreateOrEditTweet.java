@@ -101,7 +101,7 @@ public class CreateOrEditTweet extends AppCompatActivity {
                 @Override
                 public void onResponse(Call<TweetModel> call, Response<TweetModel> response) {
                     if (response.isSuccess()) {
-                        Toast.makeText(getBaseContext(), "Successfully post tweet", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getBaseContext(), "Successfully post tweet at " + response.body().created_at.toString(), Toast.LENGTH_LONG).show();
                     } else {
                         Toast.makeText(getBaseContext(), "HTTP request fail with code : " + response.code(), Toast.LENGTH_SHORT).show();
                     }
