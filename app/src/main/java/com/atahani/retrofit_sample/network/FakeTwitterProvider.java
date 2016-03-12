@@ -16,6 +16,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class FakeTwitterProvider {
 
     private FakeTwitterService mTService;
+    private Retrofit mRetrofitClient;
 
     /**
      * config Retrofit in initialization
@@ -27,12 +28,12 @@ public class FakeTwitterProvider {
                 .registerTypeAdapter(Date.class, new UTCDateTypeAdapter())
                 .create();
 
-        Retrofit retrofit = new Retrofit.Builder()
+        mRetrofitClient = new Retrofit.Builder()
                 .baseUrl(ClientConfigs.REST_API_BASE_URL) // set Base URL , should end with '/'
                 .client(httpClient) // add http client
                 .addConverterFactory(GsonConverterFactory.create(gson))//add gson converter
                 .build();
-        mTService = retrofit.create(FakeTwitterService.class);
+        mTService = mRetrofitClient.create(FakeTwitterService.class);
     }
 
     /**
@@ -44,4 +45,13 @@ public class FakeTwitterProvider {
         return mTService;
     }
 
+    /**
+     * get Retrofit client
+     * used in ErrorUtil class
+     *
+     * @return
+     */
+    public Retrofit getRetrofitClient() {
+        return mRetrofitClient;
+    }
 }

@@ -12,9 +12,11 @@ import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.atahani.retrofit_sample.R;
+import com.atahani.retrofit_sample.models.ErrorModel;
 import com.atahani.retrofit_sample.models.TweetModel;
 import com.atahani.retrofit_sample.network.FakeTwitterProvider;
 import com.atahani.retrofit_sample.network.FakeTwitterService;
+import com.atahani.retrofit_sample.utility.ErrorUtils;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -91,7 +93,8 @@ public class CreateOrEditTweet extends AppCompatActivity {
             TweetModel tweetModel = new TweetModel();
             //assign tweet model values
             tweetModel.body = mETxTweetBody.getText().toString();
-            tweetModel.feel = mSelectedMode;
+            //TODO : comment this line for test to occur error > type : 'SOME_FIELDS_ARE_EMPTY'
+//            tweetModel.feel = mSelectedMode;
 
             //create call generic class to send request to server
             Call<TweetModel> call = mTService.createNewTweet(tweetModel);
@@ -103,12 +106,14 @@ public class CreateOrEditTweet extends AppCompatActivity {
                     if (response.isSuccess()) {
                         Toast.makeText(getBaseContext(), "Successfully post tweet at " + response.body().created_at.toString(), Toast.LENGTH_LONG).show();
                     } else {
-                        Toast.makeText(getBaseContext(), "HTTP request fail with code : " + response.code(), Toast.LENGTH_SHORT).show();
+                        ErrorModel errorModel = ErrorUtils.parseError(response);
+                        Toast.makeText(getBaseContext(), "Error type is " + errorModel.type + " , description " + errorModel.description, Toast.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<TweetModel> call, Throwable t) {
+                    //occur when fail to deserialize || no network connection || server unavailable
                     Toast.makeText(getBaseContext(), "Fail it >> " + t.getCause(), Toast.LENGTH_LONG).show();
                 }
             });
