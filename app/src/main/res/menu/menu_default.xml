@@ -9,6 +9,11 @@
         android:title="Tweet"
         app:showAsAction="ifRoom" />
     <item
+        android:id="@+id/action_upload_image"
+        android:orderInCategory="100"
+        android:title="Change Image Profile"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_update_profile"
         android:orderInCategory="100"
         android:title="Update profile"

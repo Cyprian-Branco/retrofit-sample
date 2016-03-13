@@ -1,32 +1,51 @@
 package com.atahani.retrofit_sample.ui;
 
+import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.AppCompatTextView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.atahani.retrofit_sample.R;
+import com.atahani.retrofit_sample.TApplication;
 import com.atahani.retrofit_sample.adapter.OperationResultModel;
 import com.atahani.retrofit_sample.adapter.TweetAdapter;
 import com.atahani.retrofit_sample.models.ErrorModel;
 import com.atahani.retrofit_sample.models.TweetModel;
+import com.atahani.retrofit_sample.models.UserModel;
 import com.atahani.retrofit_sample.network.FakeTwitterProvider;
 import com.atahani.retrofit_sample.network.FakeTwitterService;
+import com.atahani.retrofit_sample.utility.AndroidUtilities;
 import com.atahani.retrofit_sample.utility.AppPreferenceTools;
 import com.atahani.retrofit_sample.utility.Constants;
 import com.atahani.retrofit_sample.utility.CropCircleTransformation;
 import com.atahani.retrofit_sample.utility.ErrorUtils;
 import com.squareup.picasso.Picasso;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -37,12 +56,18 @@ public class MainActivity extends AppCompatActivity {
     private FakeTwitterService mTService;
     private RecyclerView mRyTweets;
     private AppCompatTextView mTxDisplayName;
+    private ImageView mImImageProfile;
     private AppPreferenceTools mAppPreferenceTools;
+    private ProgressDialog mProgressDialog;
+    private PermissionEventListener mPermissionEventListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mProgressDialog = new ProgressDialog(this);
+        mProgressDialog.setCancelable(false);
+        mProgressDialog.setCanceledOnTouchOutside(false);
         //check is user logged it or not
         mAppPreferenceTools = new AppPreferenceTools(this);
         if (mAppPreferenceTools.isAuthorized()) {
@@ -51,11 +76,11 @@ public class MainActivity extends AppCompatActivity {
             getSupportActionBar().setTitle("");
             //bind user image and name to toolbar
             mTxDisplayName = (AppCompatTextView) toolbar.findViewById(R.id.tx_display_name);
-            ImageView imUserImageProfile = (ImageView) toolbar.findViewById(R.id.im_image_profile);
+            mImImageProfile = (ImageView) toolbar.findViewById(R.id.im_image_profile);
             mTxDisplayName.setText(mAppPreferenceTools.getUserName());
             //load user image with Picasso
             Picasso.with(this).load(mAppPreferenceTools.getImageProfileUrl())
-                    .transform(new CropCircleTransformation()).into(imUserImageProfile);
+                    .transform(new CropCircleTransformation()).into(mImImageProfile);
             //get the provider
             FakeTwitterProvider provider = new FakeTwitterProvider();
             mTService = provider.getTService();
@@ -142,8 +167,99 @@ public class MainActivity extends AppCompatActivity {
             //update the value of name in toolbar and re create the tweets Adapter
             mTxDisplayName.setText(mAppPreferenceTools.getUserName());
             mAdapter.notifyDataSetChanged();
+        } else if (requestCode == Constants.GALLERY_REQUEST_CODE && resultCode == RESULT_OK) {
+            try {
+                Uri selectedImageUri = data.getData();
+                String extractUriFrom = selectedImageUri.toString();
+                //check is from google photos or google drive
+                if (extractUriFrom.contains("com.google.android.apps.photos.contentprovider") || extractUriFrom.contains("com.google.android.apps.docs.storage")) {
+                    final int chunkSize = 1024;  // We'll read in one kB at a time
+                    byte[] imageData = new byte[chunkSize];
+                    File imageFile = AndroidUtilities.generateImagePath();
+                    InputStream in = null;
+                    OutputStream out = null;
+                    mProgressDialog.setMessage("Loading ...");
+                    mProgressDialog.show();
+                    try {
+                        in = getContentResolver().openInputStream(selectedImageUri);
+                        out = new FileOutputStream(imageFile);
+                        int bytesRead;
+                        while ((bytesRead = in.read(imageData)) > 0) {
+                            out.write(Arrays.copyOfRange(imageData, 0, Math.max(0, bytesRead)));
+                        }
+                        uploadImageProfile(imageFile.getAbsolutePath());
+                        if (mProgressDialog.isShowing()) {
+                            mProgressDialog.dismiss();
+                        }
+//                        navigateToPhotoCropActivity();
+                    } catch (Exception ex) {
+                        if (mProgressDialog.isShowing()) {
+                            mProgressDialog.dismiss();
+                        }
+                        Toast.makeText(getBaseContext(), "can not get this image :|", Toast.LENGTH_SHORT).show();
+                        Log.e("Something went wrong.", ex.toString());
+                    } finally {
+                        if (in != null) {
+                            in.close();
+                        }
+                        if (out != null) {
+                            out.close();
+                        }
+                        if (mProgressDialog.isShowing()) {
+                            mProgressDialog.dismiss();
+                        }
+                    }
+                } else {
+                    uploadImageProfile(AndroidUtilities.getPath(selectedImageUri));
+                }
+            } catch (Exception ex) {
+                Toast.makeText(getBaseContext(), "something wrong :|", Toast.LENGTH_SHORT).show();
+            }
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    /**
+     * upload image profile and is success load it into ImageView
+     *
+     * @param imagePath
+     */
+    private void uploadImageProfile(String imagePath) {
+        File imageFile = new File(imagePath);
+        if (imageFile.exists()) {
+            //create request body
+            Map<String, RequestBody> map = new HashMap<>();
+            RequestBody requestBody = RequestBody.create(MediaType.parse("image/*"), imageFile);
+            map.put("photo\"; filename=\"" + imageFile.getName() + "\"", requestBody);
+            //make call
+            Call<UserModel> call = mTService.uploadUserProfileImage("bearer " + mAppPreferenceTools.getAccessToken(), map);
+            call.enqueue(new Callback<UserModel>() {
+                @Override
+                public void onResponse(Call<UserModel> call, Response<UserModel> response) {
+                    if (response.isSuccess()) {
+                        //save the user model to pref
+                        mAppPreferenceTools.saveUserModel(response.body());
+                        //load new image
+                        Picasso.with(getBaseContext()).load(mAppPreferenceTools.getImageProfileUrl())
+                                .transform(new CropCircleTransformation())
+                                .into(mImImageProfile);
+                        //reload the adapter since the user image profile changed
+                        mAdapter.notifyDataSetChanged();
+                    } else {
+                        ErrorModel errorModel = ErrorUtils.parseError(response);
+                        Toast.makeText(getBaseContext(), "Error type is " + errorModel.type + " , description " + errorModel.description, Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<UserModel> call, Throwable t) {
+                    //occur when fail to deserialize || no network connection || server unavailable
+                    Toast.makeText(getBaseContext(), "Fail it >> " + t.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
+        } else {
+            Toast.makeText(getBaseContext(), "can not upload file since the file is not exist :|", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -185,7 +301,64 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.action_update_profile) {
             //navigate to update user profile activity
             startActivityForResult(new Intent(getBaseContext(), EditUserProfile.class), Constants.UPDATE_USER_PROFILE_REQUEST_CODE);
+        } else if (id == R.id.action_upload_image) {
+            //open gallery to select single picture as image profile
+            //before that check runtime permission
+            if (checkRunTimePermissionIsGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                startGalleryIntent();
+            } else {
+                //request write external permission for open camera intent
+                requestRunTimePermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, Constants.FOR_OPEN_GALLERY_REQUEST_WRITE_EXTERNAL_STORAGE_PER, new PermissionEventListener() {
+                    @Override
+                    public void onGranted(int requestCode, String[] permissions) {
+                        startGalleryIntent();
+                    }
+
+                    @Override
+                    public void onFailure(int requestCode, String[] permissions) {
+                        Toast.makeText(getBaseContext(), "Can not pick photo without this permission", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * start gallery intent to pick photo
+     */
+    private void startGalleryIntent() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), Constants.GALLERY_REQUEST_CODE);
+    }
+
+    private void requestRunTimePermission(String permissionType, int requestCode, PermissionEventListener permissionEventListener) {
+        ActivityCompat.requestPermissions(this, new String[]{permissionType}, requestCode);
+        mPermissionEventListener = permissionEventListener;
+    }
+
+    private boolean checkRunTimePermissionIsGranted(String permissionType) {
+        return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(TApplication.applicationContext, permissionType);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (mPermissionEventListener != null) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                mPermissionEventListener.onGranted(requestCode, permissions);
+            } else {
+                mPermissionEventListener.onFailure(requestCode, permissions);
+            }
+        }
+
+    }
+
+
+    public interface PermissionEventListener {
+        void onGranted(int requestCode, String[] permissions);
+
+        void onFailure(int requestCode, String[] permissions);
     }
 }

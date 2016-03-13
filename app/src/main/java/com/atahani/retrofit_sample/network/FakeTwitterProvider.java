@@ -1,6 +1,8 @@
 package com.atahani.retrofit_sample.network;
 
 
+import android.util.Log;
+
 import com.atahani.retrofit_sample.TApplication;
 import com.atahani.retrofit_sample.utility.AppPreferenceTools;
 import com.atahani.retrofit_sample.utility.ClientConfigs;
@@ -9,6 +11,7 @@ import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.jar.Pack200;
 
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -37,17 +40,21 @@ public class FakeTwitterProvider {
             @Override
             public Response intercept(Chain chain) throws IOException {
                 Request original = chain.request();
-                //build request
-                Request.Builder requestBuilder = original.newBuilder();
-                //add header for all of the request
-                requestBuilder.addHeader("Accept", "application/json");
-                //check is user logged in , if yes should add authorization header to every request
-                if (mAppPreferenceTools.isAuthorized()) {
-                    requestBuilder.addHeader("Authorization", "bearer " + mAppPreferenceTools.getAccessToken());
+                if (original.url().url().getPath().endsWith("user/profile/image")) {
+                    return chain.proceed(original);
+                } else {
+                    //build request
+                    Request.Builder requestBuilder = original.newBuilder();
+                    //add header for all of the request
+                    requestBuilder.addHeader("Accept", "application/json");
+                    //check is user logged in , if yes should add authorization header to every request
+                    if (mAppPreferenceTools.isAuthorized()) {
+                        requestBuilder.addHeader("Authorization", "bearer " + mAppPreferenceTools.getAccessToken());
+                    }
+                    requestBuilder.method(original.method(), original.body());
+                    Request request = requestBuilder.build();
+                    return chain.proceed(request);
                 }
-                requestBuilder.method(original.method(), original.body());
-                Request request = requestBuilder.build();
-                return chain.proceed(request);
             }
         });
         //create new gson object to define custom converter on Date type
