@@ -1,6 +1,8 @@
 package com.atahani.retrofit_sample.network;
 
 import com.atahani.retrofit_sample.adapter.OperationResultModel;
+import com.atahani.retrofit_sample.models.AuthenticationResponseModel;
+import com.atahani.retrofit_sample.models.SignUpRequestModel;
 import com.atahani.retrofit_sample.models.TweetModel;
 
 import java.util.List;
@@ -32,4 +34,8 @@ public interface FakeTwitterService {
 
     @DELETE("tweet/{id}")
     Call<OperationResultModel> deleteTweetById(@Path("id") String tweetId);
+
+    @POST("signup")
+    Call<AuthenticationResponseModel> signUp(@Body SignUpRequestModel signUpRequestModel);
+
 }
