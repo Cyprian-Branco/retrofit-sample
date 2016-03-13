@@ -24,7 +24,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".ui.CreateOrEditTweet" />
-        <activity android:name=".ui.SignUpActivity"></activity>
+        <activity android:name=".ui.SignUpActivity" />
+        <activity android:name=".ui.SignInActivity"></activity>
     </application>
 
 </manifest>

@@ -2,6 +2,7 @@ package com.atahani.retrofit_sample.network;
 
 import com.atahani.retrofit_sample.adapter.OperationResultModel;
 import com.atahani.retrofit_sample.models.AuthenticationResponseModel;
+import com.atahani.retrofit_sample.models.SignInRequestModel;
 import com.atahani.retrofit_sample.models.SignUpRequestModel;
 import com.atahani.retrofit_sample.models.TweetModel;
 
@@ -37,5 +38,11 @@ public interface FakeTwitterService {
 
     @POST("signup")
     Call<AuthenticationResponseModel> signUp(@Body SignUpRequestModel signUpRequestModel);
+
+    @POST("signin")
+    Call<AuthenticationResponseModel> signIn(@Body SignInRequestModel signInRequestModel);
+
+    @DELETE("user/app")
+    Call<OperationResultModel> terminateApp();
 
 }

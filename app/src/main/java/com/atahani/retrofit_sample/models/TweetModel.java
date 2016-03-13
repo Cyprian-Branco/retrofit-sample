@@ -12,4 +12,5 @@ public class TweetModel {
     public String body;
     public Date created_at;
     public Date updated_at;
+    public UserModel user;
 }

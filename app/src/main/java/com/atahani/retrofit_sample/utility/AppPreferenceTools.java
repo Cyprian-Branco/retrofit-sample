@@ -71,4 +71,15 @@ public class AppPreferenceTools {
     public String getImageProfileUrl() {
         return mPreference.getString(this.mContext.getString(R.string.pref_user_image_url), "");
     }
+
+    public String getUserId() {
+        return mPreference.getString(this.mContext.getString(R.string.pref_user_id), "");
+    }
+
+    /**
+     * remove all prefs in logout
+     */
+    public void removeAllPrefs() {
+        mPreference.edit().clear().apply();
+    }
 }

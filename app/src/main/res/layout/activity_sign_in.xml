@@ -22,12 +22,6 @@
         android:paddingEnd="32dp"
         android:paddingStart="32dp">
 
-        <android.support.v7.widget.AppCompatEditText
-            android:id="@+id/etx_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Your Name"
-            android:inputType="textPersonName" />
 
         <android.support.v7.widget.AppCompatEditText
             android:id="@+id/etx_email"
@@ -44,10 +38,18 @@
             android:inputType="textPassword" />
 
         <android.support.v7.widget.AppCompatButton
-            android:id="@+id/btn_sign_up"
+            android:id="@+id/btn_sign_in"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Sign Up" />
+            android:text="Sign In" />
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/btn_go_to_sign_up"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorAccent"
+            android:text="Not Member, Sign Up"
+            android:textColor="@android:color/white" />
     </LinearLayout>
 
 </RelativeLayout>

@@ -7,7 +7,6 @@ import android.support.v7.widget.AppCompatTextView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
@@ -26,7 +25,6 @@ import com.atahani.retrofit_sample.utility.CropCircleTransformation;
 import com.atahani.retrofit_sample.utility.ErrorUtils;
 import com.squareup.picasso.Picasso;
 
-import java.io.IOException;
 import java.util.List;
 
 import retrofit2.Call;
@@ -57,7 +55,6 @@ public class MainActivity extends AppCompatActivity {
             //load user image with Picasso
             Picasso.with(this).load(mAppPreferenceTools.getImageProfileUrl())
                     .transform(new CropCircleTransformation()).into(imUserImageProfile);
-            Log.d("ahmad", mAppPreferenceTools.getImageProfileUrl());
             //get the provider
             FakeTwitterProvider provider = new FakeTwitterProvider();
             mTService = provider.getTService();
@@ -102,8 +99,8 @@ public class MainActivity extends AppCompatActivity {
             //get tweets in load
             getTweetsFromServer();
         } else {
-            //the user is not logged in so should navigate to sing up activity
-            startActivity(new Intent(this, SignUpActivity.class));
+            //the user is not logged in so should navigate to sing in activity
+            startActivity(new Intent(this, SignInActivity.class));
             finish();
         }
     }
@@ -158,6 +155,27 @@ public class MainActivity extends AppCompatActivity {
             Intent postNewTweetIntent = new Intent(this, CreateOrEditTweet.class);
             postNewTweetIntent.putExtra(Constants.ACTION_TO_DO_KEY, Constants.NEW_TWEET);
             startActivityForResult(postNewTweetIntent, Constants.CREATE_OR_EDIT_TWEET_REQUEST_CODE);
+        } else if (id == R.id.action_log_out) {
+            //send request to server to terminate this application
+            Call<OperationResultModel> call = mTService.terminateApp();
+            call.enqueue(new Callback<OperationResultModel>() {
+                @Override
+                public void onResponse(Call<OperationResultModel> call, Response<OperationResultModel> response) {
+                    if (response.isSuccess()) {
+                        //remove all authentication information such as accessToken and others
+                        mAppPreferenceTools.removeAllPrefs();
+                        //navigate to sign in activity
+                        startActivity(new Intent(getBaseContext(), SignInActivity.class));
+                        //finish this
+                        finish();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<OperationResultModel> call, Throwable t) {
+
+                }
+            });
         }
         return super.onOptionsItemSelected(item);
     }

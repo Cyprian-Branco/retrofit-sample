@@ -9,9 +9,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import com.atahani.retrofit_sample.R;
 import com.atahani.retrofit_sample.models.TweetModel;
+import com.atahani.retrofit_sample.utility.AppPreferenceTools;
+import com.atahani.retrofit_sample.utility.CropCircleTransformation;
+import com.squareup.picasso.Picasso;
 
 import java.util.Collections;
 import java.util.List;
@@ -25,11 +29,13 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.TweetViewHol
     private LayoutInflater mLayoutInflater;
     private List<TweetModel> mData = Collections.emptyList();
     private TweetEventHandler mTweetEventHandler;
+    private AppPreferenceTools mAppPreferenceTools;
 
     public TweetAdapter(Context context, TweetEventHandler tweetEventHandler) {
         this.mContext = context;
         this.mLayoutInflater = LayoutInflater.from(context);
         this.mTweetEventHandler = tweetEventHandler;
+        mAppPreferenceTools = new AppPreferenceTools(this.mContext);
     }
 
     public void updateAdapterData(List<TweetModel> data) {
@@ -54,6 +60,22 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.TweetViewHol
         //get the drawable resource id
         int icon = mContext.getResources().getIdentifier(drawable_name, "drawable", mContext.getPackageName());
         holder.mImMode.setImageDrawable(ContextCompat.getDrawable(mContext, icon));
+        //check is user owner of this tweet can delete or edit
+        if (currentModel.user.id.equals(mAppPreferenceTools.getUserId())) {
+            holder.mLyAction.setVisibility(View.VISIBLE);
+            holder.mTxUserDisplayName.setText(mAppPreferenceTools.getUserName());
+            //load image via Picasso
+            Picasso.with(this.mContext).load(mAppPreferenceTools.getImageProfileUrl())
+                    .transform(new CropCircleTransformation())
+                    .into(holder.mImUserImageProfile);
+        } else {
+            holder.mTxUserDisplayName.setText(currentModel.user.name);
+            //load image via Picasso
+            Picasso.with(this.mContext).load(currentModel.user.imageUrl)
+                    .transform(new CropCircleTransformation())
+                    .into(holder.mImUserImageProfile);
+            holder.mLyAction.setVisibility(View.GONE);
+        }
     }
 
 
@@ -67,6 +89,9 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.TweetViewHol
      */
     public class TweetViewHolder extends RecyclerView.ViewHolder {
 
+        private LinearLayout mLyAction;
+        private ImageView mImUserImageProfile;
+        private AppCompatTextView mTxUserDisplayName;
         private AppCompatTextView mTxTweetBody;
         private AppCompatImageButton mImEdit;
         private AppCompatImageButton mImDelete;
@@ -74,6 +99,9 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.TweetViewHol
 
         public TweetViewHolder(View itemView) {
             super(itemView);
+            mLyAction = (LinearLayout) itemView.findViewById(R.id.ly_action);
+            mImUserImageProfile = (ImageView) itemView.findViewById(R.id.im_image_profile);
+            mTxUserDisplayName = (AppCompatTextView) itemView.findViewById(R.id.tx_user_display_name);
             mTxTweetBody = (AppCompatTextView) itemView.findViewById(R.id.tx_tweet_body);
             mImEdit = (AppCompatImageButton) itemView.findViewById(R.id.im_edit);
             mImDelete = (AppCompatImageButton) itemView.findViewById(R.id.im_delete);
