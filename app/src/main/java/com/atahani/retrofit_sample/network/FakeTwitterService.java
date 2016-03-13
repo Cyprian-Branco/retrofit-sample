@@ -2,8 +2,10 @@ package com.atahani.retrofit_sample.network;
 
 import com.atahani.retrofit_sample.adapter.OperationResultModel;
 import com.atahani.retrofit_sample.models.AuthenticationResponseModel;
+import com.atahani.retrofit_sample.models.RefreshTokenRequestModel;
 import com.atahani.retrofit_sample.models.SignInRequestModel;
 import com.atahani.retrofit_sample.models.SignUpRequestModel;
+import com.atahani.retrofit_sample.models.TokenModel;
 import com.atahani.retrofit_sample.models.TweetModel;
 import com.atahani.retrofit_sample.models.UserModel;
 
@@ -57,6 +59,11 @@ public interface FakeTwitterService {
 
     @Multipart
     @POST("user/profile/image")
-    Call<UserModel> uploadUserProfileImage(@Header("Authorization") String authHeader, @PartMap Map<String,RequestBody> map);
+    Call<UserModel> uploadUserProfileImage(@Header("Authorization") String authHeader, @PartMap Map<String, RequestBody> map);
 
+    @DELETE("tokens")
+    Call<OperationResultModel> removeAllAccessToken();
+
+    @POST("refreshtoken")
+    Call<TokenModel> getRefreshToken(@Body RefreshTokenRequestModel refreshTokenRequestModel);
 }

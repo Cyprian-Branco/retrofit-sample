@@ -320,6 +320,29 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
             }
+        } else if (id == R.id.action_expire_access_tokens) {
+            //send request to remove all access tokens
+            //make call
+            Call<OperationResultModel> call = mTService.removeAllAccessToken();
+            call.enqueue(new Callback<OperationResultModel>() {
+                @Override
+                public void onResponse(Call<OperationResultModel> call, Response<OperationResultModel> response) {
+                    //
+                    if (response.isSuccess()) {
+                        Toast.makeText(getBaseContext(), "all access token removed", Toast.LENGTH_SHORT).show();
+                    } else {
+                        ErrorModel errorModel = ErrorUtils.parseError(response);
+                        Toast.makeText(getBaseContext(), "Error type is " + errorModel.type + " , description " + errorModel.description, Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<OperationResultModel> call, Throwable t) {
+                    //occur when fail to deserialize || no network connection || server unavailable
+                    Toast.makeText(getBaseContext(), "Fail it >> " + t.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
+
         }
         return super.onOptionsItemSelected(item);
     }

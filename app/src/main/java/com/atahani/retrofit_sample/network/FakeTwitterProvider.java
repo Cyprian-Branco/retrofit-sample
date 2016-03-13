@@ -4,6 +4,9 @@ package com.atahani.retrofit_sample.network;
 import android.util.Log;
 
 import com.atahani.retrofit_sample.TApplication;
+import com.atahani.retrofit_sample.adapter.OperationResultModel;
+import com.atahani.retrofit_sample.models.RefreshTokenRequestModel;
+import com.atahani.retrofit_sample.models.TokenModel;
 import com.atahani.retrofit_sample.utility.AppPreferenceTools;
 import com.atahani.retrofit_sample.utility.ClientConfigs;
 import com.google.gson.Gson;
@@ -13,10 +16,13 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.jar.Pack200;
 
+import okhttp3.Authenticator;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.Route;
+import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -40,7 +46,8 @@ public class FakeTwitterProvider {
             @Override
             public Response intercept(Chain chain) throws IOException {
                 Request original = chain.request();
-                if (original.url().url().getPath().endsWith("user/profile/image")) {
+                String originalPath = original.url().url().getPath();
+                if (originalPath.endsWith("user/profile/image") || originalPath.endsWith("refreshtoken")) {
                     return chain.proceed(original);
                 } else {
                     //build request
@@ -54,6 +61,31 @@ public class FakeTwitterProvider {
                     requestBuilder.method(original.method(), original.body());
                     Request request = requestBuilder.build();
                     return chain.proceed(request);
+                }
+            }
+        });
+        //when request get 401 http error code this method run and get refreshToken and send original request again
+        httpClient.authenticator(new Authenticator() {
+            @Override
+            public Request authenticate(Route route, Response response) throws IOException {
+                if (mAppPreferenceTools.isAuthorized()) {
+                    //make the refresh token request model
+                    RefreshTokenRequestModel requestModel = new RefreshTokenRequestModel();
+                    requestModel.refresh_token = mAppPreferenceTools.getRefreshToken();
+                    //make call
+                    Call<TokenModel> call = mTService.getRefreshToken(requestModel);
+                    retrofit2.Response<TokenModel> tokenModelResponse = call.execute();
+                    if (tokenModelResponse.isSuccess()) {
+                        mAppPreferenceTools.saveTokenModel(tokenModelResponse.body());
+                        return response.request().newBuilder()
+                                .removeHeader("Authorization")
+                                .addHeader("Authorization", "bearer " + mAppPreferenceTools.getAccessToken())
+                                .build();
+                    } else {
+                        return null;
+                    }
+                } else {
+                    return null;
                 }
             }
         });

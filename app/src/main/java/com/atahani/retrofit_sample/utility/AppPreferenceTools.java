@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 
 import com.atahani.retrofit_sample.R;
 import com.atahani.retrofit_sample.models.AuthenticationResponseModel;
+import com.atahani.retrofit_sample.models.TokenModel;
 import com.atahani.retrofit_sample.models.UserModel;
 
 /**
@@ -43,6 +44,7 @@ public class AppPreferenceTools {
 
     /**
      * save the user model when user profile updated
+     *
      * @param userModel
      */
     public void saveUserModel(UserModel userModel) {
@@ -51,6 +53,20 @@ public class AppPreferenceTools {
                 .putString(this.mContext.getString(R.string.pref_user_email), userModel.email)
                 .putString(this.mContext.getString(R.string.pref_user_name), userModel.name)
                 .putString(this.mContext.getString(R.string.pref_user_image_url), userModel.imageUrl)
+                .apply();
+    }
+
+    /**
+     * save token model used in refresh token
+     * @param tokenModel
+     */
+    public void saveTokenModel(TokenModel tokenModel) {
+        mPreference.edit()
+                .putString(this.mContext.getString(R.string.pref_access_token), tokenModel.access_token)
+                .putLong(this.mContext.getString(R.string.pref_expire_in_sec), tokenModel.expire_in_sec)
+                .putLong(this.mContext.getString(R.string.pref_expire_at), tokenModel.expire_at.getTime())
+                .putString(this.mContext.getString(R.string.pref_refresh_token), tokenModel.refresh_token)
+                .putString(this.mContext.getString(R.string.pref_app_id), tokenModel.app_id)
                 .apply();
     }
 
@@ -88,6 +104,15 @@ public class AppPreferenceTools {
 
     public String getUserId() {
         return mPreference.getString(this.mContext.getString(R.string.pref_user_id), "");
+    }
+
+    /**
+     * get refresh token
+     *
+     * @return
+     */
+    public String getRefreshToken() {
+        return mPreference.getString(this.mContext.getString(R.string.pref_refresh_token), "");
     }
 
     /**

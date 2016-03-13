@@ -19,6 +19,11 @@
         android:title="Update profile"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_expire_access_tokens"
+        android:orderInCategory="100"
+        android:title="Expire Access Tokens"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_log_out"
         android:orderInCategory="100"
         android:title="Logout"
