@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 
 import com.atahani.retrofit_sample.R;
 import com.atahani.retrofit_sample.models.AuthenticationResponseModel;
+import com.atahani.retrofit_sample.models.UserModel;
 
 /**
  * for better management of preference in application
@@ -37,6 +38,19 @@ public class AppPreferenceTools {
                 .putString(this.mContext.getString(R.string.pref_user_email), authModel.user_profile.email)
                 .putString(this.mContext.getString(R.string.pref_user_name), authModel.user_profile.name)
                 .putString(this.mContext.getString(R.string.pref_user_image_url), authModel.user_profile.imageUrl)
+                .apply();
+    }
+
+    /**
+     * save the user model when user profile updated
+     * @param userModel
+     */
+    public void saveUserModel(UserModel userModel) {
+        mPreference.edit()
+                .putString(this.mContext.getString(R.string.pref_user_id), userModel.id)
+                .putString(this.mContext.getString(R.string.pref_user_email), userModel.email)
+                .putString(this.mContext.getString(R.string.pref_user_name), userModel.name)
+                .putString(this.mContext.getString(R.string.pref_user_image_url), userModel.imageUrl)
                 .apply();
     }
 

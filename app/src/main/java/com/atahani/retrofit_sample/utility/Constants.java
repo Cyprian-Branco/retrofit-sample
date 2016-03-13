@@ -7,6 +7,7 @@ public class Constants {
 
     //request codes
     public static final int CREATE_OR_EDIT_TWEET_REQUEST_CODE = 7;
+    public static final int UPDATE_USER_PROFILE_REQUEST_CODE = 8;
 
     //keys
     public static final String ACTION_TO_DO_KEY = "ACTION_TO_DO_KEY";

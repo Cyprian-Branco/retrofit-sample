@@ -5,6 +5,7 @@ import com.atahani.retrofit_sample.models.AuthenticationResponseModel;
 import com.atahani.retrofit_sample.models.SignInRequestModel;
 import com.atahani.retrofit_sample.models.SignUpRequestModel;
 import com.atahani.retrofit_sample.models.TweetModel;
+import com.atahani.retrofit_sample.models.UserModel;
 
 import java.util.List;
 
@@ -44,5 +45,8 @@ public interface FakeTwitterService {
 
     @DELETE("user/app")
     Call<OperationResultModel> terminateApp();
+
+    @PUT("user/profile")
+    Call<UserModel> updateUserProfile(@Body UserModel userModel);
 
 }

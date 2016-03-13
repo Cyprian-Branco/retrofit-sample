@@ -36,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private TweetAdapter mAdapter;
     private FakeTwitterService mTService;
     private RecyclerView mRyTweets;
+    private AppCompatTextView mTxDisplayName;
     private AppPreferenceTools mAppPreferenceTools;
 
     @Override
@@ -49,9 +50,9 @@ public class MainActivity extends AppCompatActivity {
             setSupportActionBar(toolbar);
             getSupportActionBar().setTitle("");
             //bind user image and name to toolbar
-            AppCompatTextView txDisplayName = (AppCompatTextView) toolbar.findViewById(R.id.tx_display_name);
+            mTxDisplayName = (AppCompatTextView) toolbar.findViewById(R.id.tx_display_name);
             ImageView imUserImageProfile = (ImageView) toolbar.findViewById(R.id.im_image_profile);
-            txDisplayName.setText(mAppPreferenceTools.getUserName());
+            mTxDisplayName.setText(mAppPreferenceTools.getUserName());
             //load user image with Picasso
             Picasso.with(this).load(mAppPreferenceTools.getImageProfileUrl())
                     .transform(new CropCircleTransformation()).into(imUserImageProfile);
@@ -137,6 +138,10 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode == Constants.CREATE_OR_EDIT_TWEET_REQUEST_CODE && resultCode == RESULT_OK) {
             getTweetsFromServer();
+        } else if (requestCode == Constants.UPDATE_USER_PROFILE_REQUEST_CODE && resultCode == RESULT_OK) {
+            //update the value of name in toolbar and re create the tweets Adapter
+            mTxDisplayName.setText(mAppPreferenceTools.getUserName());
+            mAdapter.notifyDataSetChanged();
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -173,9 +178,13 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onFailure(Call<OperationResultModel> call, Throwable t) {
-
+                    //occur when fail to deserialize || no network connection || server unavailable
+                    Toast.makeText(getBaseContext(), "Fail it >> " + t.getMessage(), Toast.LENGTH_LONG).show();
                 }
             });
+        } else if (id == R.id.action_update_profile) {
+            //navigate to update user profile activity
+            startActivityForResult(new Intent(getBaseContext(), EditUserProfile.class), Constants.UPDATE_USER_PROFILE_REQUEST_CODE);
         }
         return super.onOptionsItemSelected(item);
     }
