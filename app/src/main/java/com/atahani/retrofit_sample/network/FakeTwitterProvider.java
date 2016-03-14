@@ -1,10 +1,7 @@
 package com.atahani.retrofit_sample.network;
 
 
-import android.util.Log;
-
 import com.atahani.retrofit_sample.TApplication;
-import com.atahani.retrofit_sample.adapter.OperationResultModel;
 import com.atahani.retrofit_sample.models.RefreshTokenRequestModel;
 import com.atahani.retrofit_sample.models.TokenModel;
 import com.atahani.retrofit_sample.utility.AppPreferenceTools;
@@ -14,7 +11,6 @@ import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.jar.Pack200;
 
 import okhttp3.Authenticator;
 import okhttp3.Interceptor;

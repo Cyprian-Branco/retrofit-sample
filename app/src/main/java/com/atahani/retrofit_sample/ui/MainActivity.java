@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.AppCompatTextView;
@@ -16,6 +17,8 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -60,6 +63,11 @@ public class MainActivity extends AppCompatActivity {
     private AppPreferenceTools mAppPreferenceTools;
     private ProgressDialog mProgressDialog;
     private PermissionEventListener mPermissionEventListener;
+
+    private ImageButton mImHappy;
+    private ImageButton mImLoveMode;
+    private ImageButton mImUnHappyMode;
+    private int mCurrentCodePointMode = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -124,10 +132,44 @@ public class MainActivity extends AppCompatActivity {
             mRyTweets.setAdapter(mAdapter);
             //get tweets in load
             getTweetsFromServer();
+
+            //these lines for modes
+            mImHappy = (ImageButton) findViewById(R.id.im_happy_mode);
+            mImLoveMode = (ImageButton) findViewById(R.id.im_love_mode);
+            mImUnHappyMode = (ImageButton) findViewById(R.id.im_unhappy_mode);
+            mImHappy.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onClickOnModeBtn(getResources().getInteger(R.integer.mode_happy));
+                }
+            });
+            mImLoveMode.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onClickOnModeBtn(getResources().getInteger(R.integer.mode_love));
+                }
+            });
+            mImUnHappyMode.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onClickOnModeBtn(getResources().getInteger(R.integer.mode_unhappy));
+                }
+            });
         } else {
             //the user is not logged in so should navigate to sing in activity
             startActivity(new Intent(this, SignInActivity.class));
             finish();
+        }
+    }
+
+    private void onClickOnModeBtn(int modeCodePoint) {
+        if (mCurrentCodePointMode != modeCodePoint) {
+            selectTheFeel(modeCodePoint);
+            getTweetsByMode(modeCodePoint);
+        } else {
+            //de select all of mode and get tweet without any query
+            deSelectAllOfMode();
+            getTweetsFromServer();
         }
     }
 
@@ -140,6 +182,30 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<List<TweetModel>> call, Response<List<TweetModel>> response) {
 
+                if (response.isSuccess()) {
+                    //update the adapter data
+                    mAdapter.updateAdapterData(response.body());
+                    mAdapter.notifyDataSetChanged();
+                } else {
+                    ErrorModel errorModel = ErrorUtils.parseError(response);
+                    Toast.makeText(getBaseContext(), "Error type is " + errorModel.type + " , description " + errorModel.description, Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<TweetModel>> call, Throwable t) {
+                //occur when fail to deserialize || no network connection || server unavailable
+                Toast.makeText(getBaseContext(), "Fail it >> " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void getTweetsByMode(int modeCodePoint) {
+        //make call
+        Call<List<TweetModel>> call = mTService.getTweetsByFeel(getStringOfEmojiCode(modeCodePoint));
+        call.enqueue(new Callback<List<TweetModel>>() {
+            @Override
+            public void onResponse(Call<List<TweetModel>> call, Response<List<TweetModel>> response) {
                 if (response.isSuccess()) {
                     //update the adapter data
                     mAdapter.updateAdapterData(response.body());
@@ -376,6 +442,36 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+    }
+
+    private String getStringOfEmojiCode(int emojiCode) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(Character.toChars(emojiCode));
+        return sb.toString();
+    }
+
+    private void selectTheFeel(int emojiCodePoint) {
+        mCurrentCodePointMode = emojiCodePoint;
+        if (emojiCodePoint == getResources().getInteger(R.integer.mode_happy)) {
+            mImHappy.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background_when_selected));
+            mImLoveMode.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
+            mImUnHappyMode.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
+        } else if (emojiCodePoint == getResources().getInteger(R.integer.mode_love)) {
+            mImLoveMode.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background_when_selected));
+            mImHappy.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
+            mImUnHappyMode.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
+        } else if (emojiCodePoint == getResources().getInteger(R.integer.mode_unhappy)) {
+            mImUnHappyMode.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background_when_selected));
+            mImHappy.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
+            mImLoveMode.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
+        }
+    }
+
+    private void deSelectAllOfMode() {
+        mCurrentCodePointMode = 0;
+        mImHappy.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
+        mImLoveMode.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
+        mImUnHappyMode.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.mode_background));
     }
 
 

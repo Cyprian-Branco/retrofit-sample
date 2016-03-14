@@ -42,9 +42,46 @@
         </RelativeLayout>
     </android.support.v7.widget.Toolbar>
 
+    <LinearLayout
+        android:id="@+id/ly_mode"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_below="@id/default_toolbar"
+        android:background="@color/mode_background"
+        android:orientation="horizontal"
+        android:weightSum="3">
+
+        <ImageButton
+            android:id="@+id/im_happy_mode"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal|center_vertical"
+            android:layout_weight="1"
+            android:background="@drawable/mode_background"
+            android:src="@drawable/emoji_1f60a" />
+
+        <ImageButton
+            android:id="@+id/im_love_mode"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal|center_vertical"
+            android:layout_weight="1"
+            android:background="@drawable/mode_background"
+            android:src="@drawable/emoji_1f60d" />
+
+        <ImageButton
+            android:id="@+id/im_unhappy_mode"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal|center_vertical"
+            android:layout_weight="1"
+            android:background="@drawable/mode_background"
+            android:src="@drawable/emoji_1f61f" />
+    </LinearLayout>
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/ry_tweets"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/default_toolbar" />
+        android:layout_below="@id/ly_mode" />
 </RelativeLayout>
