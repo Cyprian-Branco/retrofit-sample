@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Retrofit_Sample</string>
+    <string name="app_name">Fake Twitter</string>
     <string name="pref_access_token" translatable="false">pref_access_token</string>
     <string name="pref_expire_in_sec" translatable="false">pref_expire_in_sec</string>
     <string name="pref_expire_at" translatable="false">pref_expire_at</string>
