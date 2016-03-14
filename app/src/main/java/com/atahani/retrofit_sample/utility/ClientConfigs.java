@@ -4,7 +4,9 @@ package com.atahani.retrofit_sample.utility;
  * contain client information such as BASE_URL || client information
  */
 public class ClientConfigs {
-    public static final String REST_API_BASE_URL = "http://192.168.0.50:8081/api/v1/";
-    public static final String CLIENT_ID = "2cf325d0-e8e7-11e5-98c4-5535a3af28c8";
-    public static final String CLIENT_KEY = "193f7a7a71571eb0fe19083fc0f083dd";
+    //TODO: should get network ip address like 192.168.1.2 and replace inside REST_API_BASE_URL
+    public static final String REST_API_BASE_URL = "http://IP_ADDRESS:8081/api/v1/";
+    //TODO: create new Client with postman in http://localshot:/api/v1/client with body {"name":"android client app"} and set these values with client_id and client_key
+    public static final String CLIENT_ID = "";
+    public static final String CLIENT_KEY = "";
 }
