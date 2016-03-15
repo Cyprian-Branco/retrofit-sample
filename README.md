@@ -18,15 +18,19 @@ this project create for [Retrofit Tutorial](https://www.youtube.com/playlist?lis
 
 ```
 $ git clone https://github.com/atahani/rest-api-sample
-$ npm install
+$ cd rest-api-sample
+$ git branch -a | grep -v HEAD | perl -ne 'chomp($_); s|^\*?\s*||; if (m|(.+)/(.+)| && not $d{$2}) {print qq(git branch --track $2 $1/$2\n)} else {$d{$_}=1}' | csh -xfs
 $ git checkout simple_rest_api
+$ npm install
+$ node server.js
 ```
 
 2 - repo contain different branches in multiple steps, so you should clone this repo and checkout related branch
 
 ```
 $ git clone https://github.com/atahani/retrofit-sample
-$ git branch
+$ cd retrofit-sample
+$ git branch -a | grep -v HEAD | perl -ne 'chomp($_); s|^\*?\s*||; if (m|(.+)/(.+)| && not $d{$2}) {print qq(git branch --track $2 $1/$2\n)} else {$d{$_}=1}' | csh -xfs
 $ git checkout 01_configure_project
 ```
 
@@ -36,5 +40,5 @@ NOTE: this application just create to demonstrate how we can use from [Retrofit]
 
 ### for more information see the slide and videos
 
-* [Youtube Playlist Link](https://www.youtube.com/playlist?list=PL-0EQDLPE23N3WkenBrZzTLfnOIAIybKm)
-* [Slides on Google Slide](https://goo.gl/lzwXys)
+* [Youtube Playlist link](https://www.youtube.com/playlist?list=PL-0EQDLPE23N3WkenBrZzTLfnOIAIybKm)
+* [Slides on Google Slide](https://goo.gl/lzwXys) 
