@@ -1,6 +1,6 @@
 ### Retrofit Sample Project
 
-this project create for Retrofit Tutorial, fake Twitter client with these feature :
+this project create for [Retrofit Tutorial](https://www.youtube.com/playlist?list=PL-0EQDLPE23N3WkenBrZzTLfnOIAIybKm), fake Twitter client with these feature :
 
 *	user can post new tweet
 *	user can edit or delete tweet
@@ -32,5 +32,9 @@ $ git checkout 01_configure_project
 
 3- set the `REST_API_BASE_URL`, `CLIENT_ID` and `CLIENT_KEY` values inside `ClientConfigs.java` class
 
-
 NOTE: this application just create to demonstrate how we can use from [Retrofit](square.github.io/retrofit/) to talk with REST API
+
+### for more information see the slide and videos
+
+* [Youtube Playlist Link](https://www.youtube.com/playlist?list=PL-0EQDLPE23N3WkenBrZzTLfnOIAIybKm)
+* [Slides on Google Slide](https://goo.gl/lzwXys)
